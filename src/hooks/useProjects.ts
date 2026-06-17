@@ -3,6 +3,8 @@ import projectsData from '@/data/projects.json';
 import type { Project } from '@/types/project';
 import { loadCustomApps, type CustomApp } from '@/components/AddAppModal';
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 const SUBJECT_COLORS: Record<string, string> = {
   math: '#2563EB', physics: '#0EA5E9', chemistry: '#10B981', biology: '#84CC16',
   chinese: '#EF4444', english: '#F59E0B', it: '#8B5CF6', psychology: '#EC4899', other: '#6B7280',
@@ -38,7 +40,13 @@ function customAppToProject(app: CustomApp): Project {
 }
 
 export function useProjects() {
-  const [builtInProjects] = useState<Project[]>(projectsData as Project[]);
+  const [builtInProjects] = useState<Project[]>(() =>
+    (projectsData as Project[]).map((p) => ({
+      ...p,
+      preview: p.preview.startsWith('/') ? `${BASE}${p.preview}` : p.preview,
+      entry: p.entry.startsWith('/') ? `${BASE}${p.entry}` : p.entry,
+    }))
+  );
   const [customApps, setCustomApps] = useState<CustomApp[]>(loadCustomApps());
   const [loading, setLoading] = useState(true);
 
