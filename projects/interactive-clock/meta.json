@@ -1,9 +1,0 @@
-{
-  "title": "交互式时钟",
-  "subject": "math",
-  "tags": ["时钟", "角度", "可视化", "小学", "初中"],
-  "description": "支持暂停、继续、重置的交互式模拟时钟，演示角度与时间的关系。",
-  "grade": "middle",
-  "difficulty": "easy",
-  "featured": true
-}

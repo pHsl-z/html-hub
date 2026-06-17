@@ -1,9 +1,0 @@
-{
-  "title": "二次函数图像探索",
-  "subject": "math",
-  "tags": ["函数", "图像", "抛物线", "高中"],
-  "description": "可拖动滑块观察 a、b、c 三个参数对二次函数 y = ax² + bx + c 图像的影响，自动标注顶点。",
-  "grade": "high",
-  "difficulty": "medium",
-  "featured": true
-}
