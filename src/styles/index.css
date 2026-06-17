@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Apple iOS/macOS 风格基础 ────────────────────────── */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-gray-100 text-gray-900 font-sans antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    background: rgba(0, 122, 255, 0.2);
+    color: inherit;
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* ── 组件层 ─────────────────────────────────────────── */
+@layer components {
+
+  /* 毛玻璃容器 */
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* 学科徽章 */
+  .chip-subject {
+    @apply inline-flex items-center gap-1.5 rounded-pill px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  /* 标签胶囊 */
+  .tag-pill {
+    @apply inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600;
+  }
+
+  /* 输入框 */
+  .apple-input {
+    @apply text-sm text-gray-900 outline-none rounded-xl bg-gray-100 px-3 py-2;
+    border: 1px solid transparent;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .apple-input::placeholder { color: #8E8E93; }
+  .apple-input:focus {
+    border-color: #007AFF;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    background: #FFFFFF;
+  }
+
+  /* loading 骨架 */
+  .skeleton {
+    background: linear-gradient(90deg, #F2F2F7, #E5E5EA, #F2F2F7);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+@layer utilities {
+  .container-page {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 1400px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-page {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+}

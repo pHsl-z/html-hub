@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>交互式时钟 - HTML 教案中枢示例</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #FAF7F2, #F1ECE2);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      color: #1B1B1B;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 28px; }
+    .face {
+      position: relative;
+      width: min(80vmin, 380px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 30px 60px rgba(31,58,46,0.18), inset 0 0 0 1px rgba(15,15,15,0.06);
+    }
+    .tick { position: absolute; left: 50%; top: 8px; width: 2px; height: 14px; background: #1B1B1B; transform-origin: 50% calc(50vmin - 8px); }
+    .tick.major { height: 22px; width: 3px; background: #1F3A2E; }
+    .num { position: absolute; font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: clamp(14px, 3.4vmin, 22px); color: #1B1B1B; }
+    .hand { position: absolute; left: 50%; bottom: 50%; transform-origin: 50% 100%; border-radius: 999px; }
+    .h { width: 6px; height: 28%; background: #1F3A2E; transform: translateX(-50%) rotate(0deg); }
+    .m { width: 4px; height: 38%; background: #1F3A2E; transform: translateX(-50%) rotate(0deg); }
+    .s { width: 2px; height: 42%; background: #B5651D; transform: translateX(-50%) rotate(0deg); }
+    .pivot { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; background: #B5651D; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 4px #FAF7F2; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      border: 1.5px solid #1F3A2E; background: #1F3A2E; color: #FFF;
+      padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn.ghost { background: transparent; color: #1F3A2E; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(31,58,46,0.18); }
+    .digital { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #5B5B5B; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="face" id="face">
+      <div class="pivot"></div>
+    </div>
+    <div class="digital" id="digital">--:--:--</div>
+    <div class="controls">
+      <button class="btn" id="toggle">⏸ 暂停</button>
+      <button class="btn ghost" id="reset">↺ 重置</button>
+    </div>
+  </div>
+  <script>
+    const face = document.getElementById('face');
+    const digital = document.getElementById('digital');
+    const toggle = document.getElementById('toggle');
+    const reset = document.getElementById('reset');
+    let running = true;
+    let h = 0, m = 0, s = 0;
+
+    // 刻度
+    for (let i = 0; i < 60; i++) {
+      const t = document.createElement('div');
+      t.className = 'tick' + (i % 5 === 0 ? ' major' : '');
+      t.style.transform = `translateX(-50%) rotate(${i * 6}deg)`;
+      face.appendChild(t);
+    }
+    // 数字
+    const numLabels = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    for (let i = 0; i < 12; i++) {
+      const n = document.createElement('div');
+      n.className = 'num';
+      const angle = (i * 30 - 90) * Math.PI / 180;
+      const r = 44; // % of face
+      n.style.left = `calc(50% + ${Math.cos(angle) * r}% - 50% )`;
+      n.style.top = `calc(50% + ${Math.sin(angle) * r}% - 50% )`;
+      n.textContent = numLabels[i];
+      face.appendChild(n);
+    }
+    // 指针
+    const hour = document.createElement('div'); hour.className = 'hand h'; face.appendChild(hour);
+    const min = document.createElement('div'); min.className = 'hand m'; face.appendChild(min);
+    const sec = document.createElement('div'); sec.className = 'hand s'; face.appendChild(sec);
+
+    function tick() {
+      if (running) {
+        s += 1;
+        if (s >= 60) { s = 0; m += 1; }
+        if (m >= 60) { m = 0; h = (h + 1) % 12; }
+      }
+      const sDeg = s * 6;
+      const mDeg = m * 6 + s * 0.1;
+      const hDeg = h * 30 + m * 0.5;
+      sec.style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+      min.style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+      hour.style.transform = `translateX(-50%) rotate(${hDeg}deg)`;
+      digital.textContent = `${String(h || 12).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      requestAnimationFrame(() => setTimeout(tick, 1000));
+    }
+    tick();
+
+    toggle.onclick = () => {
+      running = !running;
+      toggle.textContent = running ? '⏸ 暂停' : '▶ 继续';
+    };
+    reset.onclick = () => { h = m = s = 0; };
+  </script>
+</body>
+</html>

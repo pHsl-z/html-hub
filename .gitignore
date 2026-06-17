@@ -1,0 +1,29 @@
+node_modules
+dist
+dist-ssr
+.DS_Store
+*.local
+.vite
+.env
+.env.*
+
+# TS 增量构建缓存
+*.tsbuildinfo
+
+# tsc -b 误生成的 vite.config 副本
+vite.config.js
+vite.config.d.ts
+
+# 由 scripts/build-manifest.mjs 自动生成，不入库
+public/projects/
+src/data/projects.json
+
+# 编辑器
+.vscode
+.idea
+*.swp
+
+# 临时文件
+*.log
+npm-debug.log*
+pnpm-debug.log*

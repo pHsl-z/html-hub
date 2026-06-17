@@ -1,0 +1,9 @@
+{
+  "title": "硬币旋转悖论",
+  "subject": "math",
+  "tags": ["几何", "圆", "悖论", "动画", "交互"],
+  "description": "小圆绕大圆滚动一周，自身转几周？可视化探索硬币旋转悖论，支持内外滚、自定义半径比。",
+  "grade": "high",
+  "difficulty": "medium",
+  "featured": true
+}

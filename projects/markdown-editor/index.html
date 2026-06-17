@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Markdown 在线编辑器</title>
+  <style>
+    body { margin: 0; min-height: 100vh; background: #FDFBF6; font-family: -apple-system, 'Inter', sans-serif; color: #1B1B1B; }
+    .shell { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+    .pane { padding: 20px; }
+    .pane.left { background: #FAF7F2; border-right: 1px solid #ECE6DC; }
+    .pane.right { background: #fff; }
+    textarea { width: 100%; height: calc(100vh - 40px); border: 0; background: transparent; resize: none; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.7; color: #1B1B1B; }
+    h1.title { font-family: Georgia, serif; font-size: 18px; margin: 0 0 8px; }
+    .preview { line-height: 1.75; }
+    .preview h1, .preview h2, .preview h3 { font-family: Georgia, serif; margin-top: 1.2em; }
+    .preview code { background: #ECE6DC; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+    .preview pre { background: #1F3A2E; color: #F4C95D; padding: 12px 16px; border-radius: 10px; overflow-x: auto; }
+    .preview pre code { background: transparent; color: inherit; padding: 0; }
+    .preview blockquote { border-left: 3px solid #B5651D; padding-left: 12px; color: #5B5B5B; }
+    .preview a { color: #1F3A2E; }
+    @media (max-width: 720px) { .shell { grid-template-columns: 1fr; } .pane.left { border-right: 0; border-bottom: 1px solid #ECE6DC; } textarea { height: 40vh; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="pane left">
+      <h1 class="title">📝 编辑器（Markdown）</h1>
+      <textarea id="md" spellcheck="false"># 你好，世界
+
+这是一个 **Markdown** 在线编辑器。试试输入：
+
+- 列表项
+- 另一个列表项
+
+## 代码
+
+```js
+function hello() {
+  console.log('hi');
+}
+```
+
+## 引用
+
+> 学习是一辈子的事。
+
+## 链接
+
+访问 [HTML 教案中枢](https://github.com/)。</textarea>
+    </div>
+    <div class="pane right">
+      <h1 class="title">👀 预览</h1>
+      <div class="preview" id="preview"></div>
+    </div>
+  </div>
+  <script>
+    const md = document.getElementById('md');
+    const preview = document.getElementById('preview');
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function render(src) {
+      let html = escapeHtml(src);
+      // 代码块
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => `<pre><code>${code}</code></pre>`);
+      // 标题
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      // 引用
+      html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+      // 粗体
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // 斜体
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      // 行内代码
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // 链接
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+      // 列表
+      html = html.replace(/(^- .+(?:\n- .+)*)/gm, (block) => {
+        const items = block.split('\n').map(l => `<li>${l.slice(2)}</li>`).join('');
+        return `<ul>${items}</ul>`;
+      });
+      // 段落
+      html = html.split(/\n{2,}/).map(p => {
+        if (/^<(h\d|ul|pre|blockquote)/.test(p.trim())) return p;
+        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+      }).join('\n');
+      preview.innerHTML = html;
+    }
+    md.addEventListener('input', () => render(md.value));
+    render(md.value);
+  </script>
+</body>
+</html>

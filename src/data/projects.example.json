@@ -1,0 +1,15 @@
+[
+  {
+    "slug": "示例-二次函数图像",
+    "title": "示例：二次函数图像（请替换）",
+    "subject": "math",
+    "tags": ["函数", "图像", "示例"],
+    "description": "这是一个占位示例。请把你的 HTML 应用放入 projects/<名称>/index.html，然后运行 npm run build:manifest。",
+    "grade": "high",
+    "difficulty": "medium",
+    "preview": "/projects/示例-二次函数图像/preview.svg",
+    "entry": "/projects/示例-二次函数图像/index.html",
+    "updatedAt": "2026-06-16T00:00:00.000Z",
+    "featured": true
+  }
+]

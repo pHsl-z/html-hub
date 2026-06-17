@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>硬币旋转悖论</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:#0d0d1a;color:#ccc;min-height:100vh;overflow-x:hidden;}
+.topbar{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 20px 8px;flex-wrap:wrap;}
+h1{font-size:1.8em;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#f0a500,#a855f7,#e04090);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sub{font-size:.85em;color:#666;}
+.mode-switch{display:flex;gap:0;border-radius:40px;overflow:hidden;border:1px solid rgba(255,255,255,.12);margin-left:auto;}
+.mode-btn{padding:7px 18px;font-size:.82em;font-weight:700;cursor:pointer;border:none;background:rgba(255,255,255,.04);color:#666;transition:all .3s;font-family:inherit;}
+.mode-btn.active{background:rgba(168,85,247,.2);color:#a855f7;}
+.mode-btn:hover{background:rgba(255,255,255,.08);}
+.tabs{display:flex;gap:8px;justify-content:center;padding:6px 0 6px;}
+.tab{padding:9px 28px;border-radius:40px;font-size:.95em;font-weight:700;border:none;cursor:pointer;letter-spacing:1px;transition:all .3s;font-family:inherit;}
+.tab-in{background:rgba(240,165,0,.12);color:#f0a500;border:1px solid rgba(240,165,0,.25);}
+.tab-in.active,.tab-in:hover{background:rgba(240,165,0,.25);box-shadow:0 0 20px rgba(240,165,0,.2);}
+.tab-out{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.25);}
+.tab-out.active,.tab-out:hover{background:rgba(168,85,247,.25);box-shadow:0 0 20px rgba(168,85,247,.2);}
+.tab-disabled{opacity:.35;pointer-events:none;}
+
+/* ── 设置按钮 ── */
+.settings-btn{
+  padding:7px 14px;border-radius:40px;font-size:1em;font-weight:700;
+  border:1px solid rgba(56,184,248,.2);background:rgba(56,184,248,.06);
+  color:#38bdf8;cursor:pointer;transition:all .3s;font-family:inherit;
+}
+.settings-btn:hover{background:rgba(56,184,248,.12);}
+.settings-btn.open{background:rgba(56,184,248,.15);border-color:rgba(56,184,248,.35);}
+
+/* ── 设置面板 ── */
+.settings-panel{
+  position:absolute;top:100%;right:0;z-index:100;
+  max-height:0;overflow:hidden;transition:max-height .35s ease;
+  background:rgba(13,13,26,.96);border:1px solid rgba(255,255,255,.08);
+  border-radius:0 0 14px 14px;min-width:420px;
+}
+.settings-panel.open{max-height:200px;}
+.settings-inner{
+  display:flex;align-items:center;gap:16px;justify-content:center;
+  padding:10px 20px;flex-wrap:wrap;
+}
+.s-row{display:flex;align-items:center;gap:6px;}
+.s-lbl{font-size:.8em;color:#555;font-weight:700;white-space:nowrap;}
+.s-val{font-size:.95em;font-weight:900;color:#38bdf8;min-width:36px;text-align:center;}
+.slider{
+  -webkit-appearance:none;appearance:none;height:5px;border-radius:3px;
+  background:rgba(255,255,255,.08);outline:none;cursor:pointer;
+}
+.slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+  background:linear-gradient(135deg,#38bdf8,#a855f7);border:2px solid rgba(255,255,255,.2);
+  box-shadow:0 0 6px rgba(56,184,248,.3);cursor:pointer;
+}
+.slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#a855f7);border:2px solid rgba(255,255,255,.2);box-shadow:0 0 6px rgba(56,184,248,.3);cursor:pointer;}
+.ratio-input{width:48px;padding:3px 5px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#ccc;font-size:.85em;text-align:center;font-family:inherit;}
+.ratio-input:focus{outline:none;border-color:rgba(56,184,248,.5);}
+.dir-btn{
+  padding:4px 12px;border-radius:20px;font-size:.78em;font-weight:700;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);
+  color:#555;cursor:pointer;transition:all .3s;font-family:inherit;
+}
+.dir-btn.active{background:rgba(56,184,248,.12);color:#38bdf8;border-color:rgba(56,184,248,.3);}
+.dir-btn:hover{background:rgba(255,255,255,.07);}
+
+/* ── 页面布局 ── */
+.page{display:none;flex-direction:column;align-items:center;padding-bottom:30px;}
+.page.active{display:flex;}
+.statement{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 22px;margin:0 16px 10px;max-width:560px;font-size:.92em;line-height:1.7;text-align:center;}
+.statement em{font-style:normal;font-weight:900;font-size:1.3em;}
+.statement .c-in{color:#f0a500;}
+.statement .c-out{color:#a855f7;}
+canvas{border-radius:18px;margin:4px 0;max-width:100%;height:auto;}
+.info{display:flex;gap:14px;margin:6px 0;flex-wrap:wrap;justify-content:center;}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 16px;text-align:center;min-width:100px;}
+.card .lbl{font-size:.72em;color:#555;margin-bottom:2px;}
+.card .val{font-size:1.35em;font-weight:900;}
+.ctrls{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap;justify-content:center;align-items:center;}
+.btn{padding:10px 22px;border-radius:40px;font-size:.9em;font-weight:700;border:none;cursor:pointer;letter-spacing:.5px;transition:all .3s;font-family:inherit;}
+.btn-play-in{background:#f0a500;color:#1a1a2e;}
+.btn-play-out{background:#a855f7;color:#fff;}
+.btn-play-in:hover,.btn-play-out:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.btn-reset{background:rgba(255,255,255,.08);color:#aaa;border:1px solid rgba(255,255,255,.15);}
+.btn-reset:hover{background:rgba(255,255,255,.14);}
+.spd{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);padding:6px 14px;border-radius:40px;border:1px solid rgba(255,255,255,.1);}
+.spd label{font-size:.78em;color:#555;}
+.spd input{width:80px;}
+.spinners{display:flex;gap:10px;justify-content:center;margin:2px 0 4px;}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid rgba(168,85,247,.2);display:flex;align-items:center;justify-content:center;font-size:.72em;color:#444;transition:all .3s;}
+.dot.on{border-color:#a855f7;background:rgba(168,85,247,.2);color:#a855f7;box-shadow:0 0 12px rgba(168,85,247,.3);}
+.dot-in.on{border-color:#f0a500;background:rgba(240,165,0,.2);color:#f0a500;box-shadow:0 0 12px rgba(240,165,0,.3);}
+.dot-in{border-color:rgba(240,165,0,.2);}
+.exp{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 20px;margin:8px 16px 0;max-width:560px;font-size:.86em;line-height:1.8;color:#888;}
+.exp h3{font-size:1em;margin-bottom:6px;}
+.exp .fml{padding:10px 16px;margin:8px 0;border-radius:0 8px 8px 0;}
+.fml-in{background:rgba(240,165,0,.08);border-left:3px solid #f0a500;}
+.fml-out{background:rgba(168,85,247,.08);border-left:3px solid #a855f7;}
+body.widescreen .page.active{flex-direction:row;align-items:flex-start;justify-content:center;gap:24px;padding:10px 20px 20px;max-width:1200px;margin:0 auto;}
+body.widescreen .canvas-col{flex-shrink:0;}
+body.widescreen .side-col{display:flex;flex-direction:column;gap:10px;min-width:280px;max-width:340px;}
+body.widescreen .statement{margin:0;max-width:none;}
+body.widescreen .info{justify-content:flex-start;}
+body.widescreen .ctrls{justify-content:flex-start;}
+body.widescreen .exp{margin:0;max-width:none;}
+body.widescreen canvas{margin:0;max-width:560px;}
+.fml-in .katex{color:#f0a500;}
+.fml-out .katex{color:#a855f7;}
+.exp .katex{font-size:1.05em;}
+.in-notice{background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);border-radius:10px;padding:10px 16px;text-align:center;color:#f0a500;font-size:.9em;}
+</style>
+</head>
+<body>
+
+<div class="topbar" style="position:relative">
+  <div><h1>硬币旋转悖论</h1><div class="sub">小圆绕大圆滚动一周，自身转几周？</div></div>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+    <div class="mode-switch">
+      <button class="mode-btn" id="modeMobile" onclick="setMode('mobile')">📱 手机屏</button>
+      <button class="mode-btn active" id="modeWide" onclick="setMode('widescreen')">🖥 宽屏</button>
+    </div>
+    <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙</button>
+  </div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-inner">
+      <div class="s-row">
+        <span class="s-lbl">R / r</span>
+        <input type="range" class="slider" id="ratioSlider" style="width:160px" min="0.1" max="10" step="0.1" value="2" oninput="onRatioSlider(+this.value)">
+        <input type="number" class="ratio-input" id="ratioInput" value="2" min="0.1" max="20" step="0.1" onchange="onRatioInput(+this.value)">
+        <span class="s-val" id="ratioVal">2 : 1</span>
+      </div>
+      <div class="s-row">
+        <span class="s-lbl">标记点</span>
+        <input type="range" class="slider" id="dotSlider" style="width:90px" min="0" max="64" step="1" value="0" oninput="numDots=+this.value;document.getElementById('dotVal').textContent=this.value;draw(0);draw(1);">
+        <span class="s-val" id="dotVal">0</span>
+      </div>
+      <div class="s-row">
+        <span class="s-lbl">绕行圈数</span>
+        <input type="range" class="slider" id="orbitSlider" style="width:80px" min="1" max="10" step="1" value="1" oninput="orbitCount=+this.value;document.getElementById('orbitVal').textContent=this.value;resetAll();">
+        <span class="s-val" id="orbitVal">1</span>
+      </div>
+      <div class="s-row">
+        <span class="s-lbl">旋转方向</span>
+        <button class="dir-btn active" id="dirCCW" onclick="setDir(1)">逆时针 ↺</button>
+        <button class="dir-btn" id="dirCW" onclick="setDir(-1)">顺时针 ↻</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab tab-in active" id="tabInBtn" onclick="switchTab(0)">内滚 · 1 周</button>
+  <button class="tab tab-out" id="tabOutBtn" onclick="switchTab(1)">外滚 · 3 周</button>
+</div>
+
+<!-- ====== 内滚 ====== -->
+<div id="page0" class="page active">
+<div class="canvas-col"><canvas id="cv0" width="600" height="600"></canvas></div>
+<div class="side-col">
+  <div id="inNotice" style="display:none" class="in-notice">R/r &lt; 1 时内滚不适用（小圆无法放入比它小的圆内）</div>
+  <div class="statement">小圆在大圆<span class="c-in">内壁</span>滚动 · 绕大圆一周 · 小圆自身转 <em class="c-in" id="stmtInN">1</em> 周</div>
+  <div class="info">
+    <div class="card"><div class="lbl">大圆半径 R</div><div class="val" style="color:#38bdf8" id="infoR0">2r</div></div>
+    <div class="card"><div class="lbl">公转角度</div><div class="val" id="orb0" style="color:#e04090">0°</div></div>
+    <div class="card"><div class="lbl">自转圈数</div><div class="val" id="spin0" style="color:#f0a500">0.00</div></div>
+  </div>
+  <div class="spinners" id="spinDotsIn"></div>
+  <div class="ctrls">
+    <button class="btn btn-play-in" id="b0" onclick="play(0)">▶ 播放</button>
+    <button class="btn btn-reset" onclick="rst(0)">↺ 重置</button>
+    <div class="spd"><label>速度</label><input type="range" id="s0" min="0.2" max="4" step="0.1" value="1" oninput="st[0].speed=+this.value"></div>
+  </div>
+  <div class="exp">
+    <h3 style="color:#f0a500">为什么是 <span id="expInN">1</span> 周？</h3>
+    <p>内滚时小圆<span style="color:#f0a500;font-weight:700">顺时针</span>自转，公转<span style="color:#f0a500;font-weight:700">逆时针</span>，方向相反：</p>
+    <div class="fml fml-in">$$\text{自转圈数} = \frac{R}{r} - 1$$</div>
+    <p id="calcInText">当 R/r = 2 时：2 − 1 = 1 周</p>
+    <p>内摆线方程：</p>
+    <div class="fml fml-in">$$x = (R-r)\cos\theta + r\cos\!\left(\tfrac{R}{r}-1\right)\theta$$</div>
+    <div class="fml fml-in">$$y = (R-r)\sin\theta - r\sin\!\left(\tfrac{R}{r}-1\right)\theta$$</div>
+    <p id="calcInNote">当 R=2r 时，y 项消去，内摆线退化为一条直径。</p>
+  </div>
+</div>
+</div>
+
+<!-- ====== 外滚 ====== -->
+<div id="page1" class="page">
+<div class="canvas-col"><canvas id="cv1" width="600" height="600"></canvas></div>
+<div class="side-col">
+  <div class="statement">小圆贴着大圆<span class="c-out">外壁</span>滚动 · 绕大圆一周 · 小圆自身转 <em class="c-out" id="stmtOutN">3</em> 周</div>
+  <div class="info">
+    <div class="card"><div class="lbl">大圆半径 R</div><div class="val" style="color:#38bdf8" id="infoR1">2r</div></div>
+    <div class="card"><div class="lbl">公转角度</div><div class="val" id="orb1" style="color:#e04090">0°</div></div>
+    <div class="card"><div class="lbl">自转圈数</div><div class="val" id="spin1" style="color:#a855f7">0.00</div></div>
+  </div>
+  <div class="spinners" id="spinDotsOut"></div>
+  <div class="ctrls">
+    <button class="btn btn-play-out" id="b1" onclick="play(1)">▶ 播放</button>
+    <button class="btn btn-reset" onclick="rst(1)">↺ 重置</button>
+    <div class="spd"><label>速度</label><input type="range" id="s1" min="0.2" max="4" step="0.1" value="1" oninput="st[1].speed=+this.value"></div>
+  </div>
+  <div class="exp">
+    <h3 style="color:#a855f7">为什么是 <span id="expOutN">3</span> 周？</h3>
+    <p>外滚时自转方向与公转方向<strong>相同</strong>，两者叠加。</p>
+    <div class="fml fml-out">$$\text{自转圈数} = \frac{R}{r} + 1$$</div>
+    <p id="calcOutText">当 R/r = 2 时：2 + 1 = 3 周</p>
+    <p>外摆线方程：</p>
+    <div class="fml fml-out">$$x = (R+r)\cos\theta - r\cos\!\left(\tfrac{R}{r}+1\right)\theta$$</div>
+    <div class="fml fml-out">$$y = (R+r)\sin\theta - r\sin\!\left(\tfrac{R}{r}+1\right)\theta$$</div>
+    <p id="calcOutNote">圆心路程 = 2π(R+r) = 6πr = 3×小圆周长 → 自转 3 周。直觉认为 2 周，实际 3 周——这就是著名的硬币旋转悖论。</p>
+  </div>
+</div>
+</div>
+
+<script>
+let Rval = 2, rval = 1;
+let numDots = 0;
+let orbitCount = 1;
+let dirSign = 1; // 1=逆时针, -1=顺时针
+
+const dotColors = [];
+for (let i = 0; i < 64; i++) dotColors.push(`hsl(${i * 360 / 64}, 85%, 60%)`);
+
+const st = [
+  { theta:0, running:false, speed:1, trail:[], ctx:null, finished:false, ghosts:[], lastSpinInt:0 },
+  { theta:0, running:false, speed:1, trail:[], ctx:null, finished:false, ghosts:[], lastSpinInt:0 }
+];
+st[0].ctx = document.getElementById('cv0').getContext('2d');
+st[1].ctx = document.getElementById('cv1').getContext('2d');
+
+function toggleSettings() {
+  const p = document.getElementById('settingsPanel');
+  const b = document.getElementById('settingsBtn');
+  p.classList.toggle('open');
+  b.classList.toggle('open');
+}
+
+function setDir(d) {
+  dirSign = d;
+  document.getElementById('dirCCW').classList.toggle('active', d === 1);
+  document.getElementById('dirCW').classList.toggle('active', d === -1);
+  resetAll();
+}
+
+function getDrawParams(idx) {
+  const ctx = st[idx].ctx;
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const cx = W / 2, cy = H / 2;
+  const margin = 45;
+  const half = Math.min(W, H) / 2;
+  const maxExtent = idx === 0 ? Rval : (Rval + 2);
+  const scale = (half - margin) / maxExtent;
+  return { cx, cy, W, H, R: Rval * scale, r: scale, scale };
+}
+
+function onRatioSlider(v) {
+  Rval = v; rval = 1;
+  document.getElementById('ratioInput').value = v;
+  updateRatioDisplay(); resetAll(); updateUI();
+}
+function onRatioInput(v) {
+  if (isNaN(v) || v < 0.1) v = 0.1;
+  if (v > 20) v = 20;
+  Rval = v; rval = 1;
+  document.getElementById('ratioSlider').value = Math.min(10, Math.max(0.1, v));
+  updateRatioDisplay(); resetAll(); updateUI();
+}
+function updateRatioDisplay() {
+  const r = Rval;
+  for (let d = 1; d <= 10; d++) {
+    if (Math.abs(r * d - Math.round(r * d)) < 0.01) {
+      document.getElementById('ratioVal').textContent = Math.round(r * d) + ' : ' + d;
+      return;
+    }
+  }
+  document.getElementById('ratioVal').textContent = r.toFixed(1) + ' : 1';
+}
+
+function updateUI() {
+  const ratio = Rval;
+  const innerN = Math.max(0, ratio - 1);
+  const outerN = ratio + 1;
+  const innerOk = ratio > 1;
+
+  const tabIn = document.getElementById('tabInBtn');
+  if (innerOk) {
+    tabIn.textContent = '内滚 · ' + (Number.isInteger(innerN) ? innerN : innerN.toFixed(1)) + ' 周';
+    tabIn.classList.remove('tab-disabled');
+  } else {
+    tabIn.textContent = '内滚（不适用）';
+    tabIn.classList.add('tab-disabled');
+  }
+  document.getElementById('tabOutBtn').textContent = '外滚 · ' + (Number.isInteger(outerN) ? outerN : outerN.toFixed(1)) + ' 周';
+  document.getElementById('inNotice').style.display = innerOk ? 'none' : 'block';
+
+  document.getElementById('stmtInN').textContent = Number.isInteger(innerN) ? innerN : innerN.toFixed(2);
+  document.getElementById('stmtOutN').textContent = Number.isInteger(outerN) ? outerN : outerN.toFixed(2);
+  const rs = Number.isInteger(ratio) ? ratio.toString() : ratio.toFixed(2);
+  document.getElementById('infoR0').textContent = rs + 'r';
+  document.getElementById('infoR1').textContent = rs + 'r';
+  document.getElementById('expInN').textContent = Number.isInteger(innerN) ? innerN : innerN.toFixed(2);
+  document.getElementById('expOutN').textContent = Number.isInteger(outerN) ? outerN : outerN.toFixed(2);
+  document.getElementById('calcInText').textContent = '当 R/r = ' + rs + ' 时：' + rs + ' − 1 = ' + (Number.isInteger(innerN)?innerN:innerN.toFixed(2)) + ' 周';
+  document.getElementById('calcOutText').textContent = '当 R/r = ' + rs + ' 时：' + rs + ' + 1 = ' + (Number.isInteger(outerN)?outerN:outerN.toFixed(2)) + ' 周';
+
+  if (ratio === 2) {
+    document.getElementById('calcInNote').textContent = '当 R=2r 时，y 项消去，内摆线退化为一条直径。';
+    document.getElementById('calcOutNote').textContent = '圆心路程 = 2π(R+r) = 6πr = 3×小圆周长 → 自转 3 周。直觉认为 2 周，实际 3 周——这就是著名的硬币旋转悖论。';
+  } else {
+    document.getElementById('calcInNote').textContent = '内摆线形状取决于 R/r 的比值，当比值为整数时曲线闭合。';
+    document.getElementById('calcOutNote').textContent = '圆心路程 = 2π(R+r)，小圆周长 = 2πr，自转圈数 = (R+r)/r = R/r + 1 = ' + (Number.isInteger(outerN)?outerN:outerN.toFixed(2)) + '。';
+  }
+
+  const dcIn = document.getElementById('spinDotsIn');
+  dcIn.innerHTML = '';
+  if (innerOk && Number.isInteger(innerN)) {
+    for (let i = 1; i <= innerN; i++) { const d = document.createElement('div'); d.className = 'dot dot-in'; d.id = 'di' + i; d.textContent = i; dcIn.appendChild(d); }
+  }
+  const dcOut = document.getElementById('spinDotsOut');
+  dcOut.innerHTML = '';
+  const outerInt = Math.ceil(outerN);
+  for (let i = 1; i <= outerInt; i++) { const d = document.createElement('div'); d.className = 'dot'; d.id = 'do' + i; d.textContent = i; dcOut.appendChild(d); }
+}
+
+function resetAll() {
+  for (let i = 0; i < 2; i++) { st[i].running = false; st[i].finished = false; st[i].theta = 0; st[i].trail = []; st[i].ghosts = []; st[i].lastSpinInt = 0; document.getElementById('b'+i).textContent = '▶ 播放'; }
+  draw(0); draw(1);
+}
+function setMode(mode) { document.body.classList.toggle('widescreen', mode === 'widescreen'); document.getElementById('modeWide').classList.toggle('active', mode === 'widescreen'); document.getElementById('modeMobile').classList.toggle('active', mode !== 'widescreen'); if (typeof renderMathInElement === 'function') renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]}); }
+function switchTab(i) { document.getElementById('page0').classList.toggle('active', i===0); document.getElementById('page1').classList.toggle('active', i===1); document.querySelectorAll('.tab-in')[0].classList.toggle('active', i===0); document.querySelectorAll('.tab-out')[0].classList.toggle('active', i===1); }
+function play(i) {
+  const s = st[i]; if (i===0 && Rval <= 1) return;
+  if (s.finished) { s.theta = 0; s.trail = []; s.finished = false; s.ghosts = []; s.lastSpinInt = 0; clearDots(i); s.running = true; document.getElementById('b'+i).textContent = '⏸ 暂停'; draw(i); animLoop(i); return; }
+  s.running = !s.running; document.getElementById('b'+i).textContent = s.running ? '⏸ 暂停' : '▶ 继续'; if (s.running) animLoop(i);
+}
+function clearDots(i) { document.querySelectorAll('#' + (i===0?'spinDotsIn':'spinDotsOut') + ' .dot').forEach(d => d.classList.remove('on')); }
+function rst(i) { st[i].running = false; st[i].finished = false; st[i].theta = 0; st[i].trail = []; st[i].ghosts = []; st[i].lastSpinInt = 0; clearDots(i); document.getElementById('b'+i).textContent = '▶ 播放'; draw(i); }
+
+function bg(ctx, W, H, cx, cy) { const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, W/1.6); g.addColorStop(0, '#141428'); g.addColorStop(1, '#0a0a14'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.fillStyle = 'rgba(255,255,255,.025)'; for (let x=0; x<W; x+=24) for (let y=0; y<H; y+=24) { ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fill(); } }
+function bigCircle(ctx, cx, cy, R) { for (let i=3; i>0; i--) { ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.strokeStyle = `rgba(56,184,248,${0.02*i})`; ctx.lineWidth = i*8; ctx.stroke(); } const g = ctx.createLinearGradient(cx-R, cy-R, cx+R, cy+R); g.addColorStop(0, '#38bdf8'); g.addColorStop(1, '#0ea5e9'); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.strokeStyle = g; ctx.lineWidth = 2.5; ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI*2); ctx.fillStyle = 'rgba(56,184,248,.4)'; ctx.fill(); }
+function drawTrail(ctx, trail, color, glowColor) { if (trail.length < 2) return; const path = new Path2D(); path.moveTo(trail[0].x, trail[0].y); for (let i = 1; i < trail.length; i++) path.lineTo(trail[i].x, trail[i].y); ctx.strokeStyle = glowColor; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(path); ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke(path); }
+
+function drawMarkerDots(ctx, scx, scy, r, rotAngle) {
+  if (numDots <= 0) return;
+  const dotR = Math.max(2.5, Math.min(4, r * 0.04));
+  for (let i = 0; i < numDots; i++) {
+    const a = rotAngle + (2 * Math.PI * i / numDots);
+    const dx = scx + r * Math.cos(a);
+    const dy = scy + r * Math.sin(a);
+    ctx.beginPath(); ctx.arc(dx, dy, dotR, 0, Math.PI*2);
+    ctx.fillStyle = dotColors[i % 64]; ctx.fill();
+  }
+}
+
+function drawGhosts(ctx, ghosts, r, fillColor, strokeColor, spokeColor, labelColor) {
+  const fontSize = Math.max(10, Math.min(16, r * 0.25));
+  for (const g of ghosts) {
+    ctx.beginPath(); ctx.arc(g.scx, g.scy, r, 0, Math.PI*2); ctx.fillStyle = fillColor; ctx.fill();
+    ctx.beginPath(); ctx.arc(g.scx, g.scy, r, 0, Math.PI*2); ctx.strokeStyle = strokeColor; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+    const a0 = g.phi; const ex = g.scx + r * .88 * Math.cos(a0); const ey = g.scy + r * .88 * Math.sin(a0);
+    ctx.beginPath(); ctx.moveTo(g.scx, g.scy); ctx.lineTo(ex, ey); ctx.strokeStyle = spokeColor; ctx.lineWidth = 1; ctx.stroke();
+    ctx.font = `bold ${fontSize}px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif`; ctx.fillStyle = labelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('第' + g.n + '圈', g.scx, g.scy); ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+}
+
+// ── 内滚 ──
+function drawInside() {
+  const s = st[0]; const {cx, cy, W, H, R, r} = getDrawParams(0); const ctx = s.ctx;
+  ctx.clearRect(0, 0, W, H); bg(ctx, W, H, cx, cy);
+  if (Rval <= 1) { ctx.font = '18px "Noto Sans SC",sans-serif'; ctx.fillStyle = '#f0a500'; ctx.textAlign = 'center'; ctx.fillText('R/r ≤ 1 时内滚不适用', cx, cy); ctx.textAlign = 'start'; return; }
+  bigCircle(ctx, cx, cy, R);
+
+  const th = s.theta; const ratio = Rval; const d = dirSign;
+  const scx = cx + (R - r) * Math.cos(d * th);
+  const scy = cy + (R - r) * Math.sin(d * th);
+  const phi = th; // 自转角度（绝对值）
+  const mx = scx + r * Math.cos(d * phi);
+  const my = scy - r * Math.sin(d * phi);
+
+  const totalSpins = (ratio - 1) * th / (2 * Math.PI);
+  const spinInt = Math.floor(totalSpins);
+  if (spinInt > s.lastSpinInt) { for (let n = s.lastSpinInt + 1; n <= spinInt; n++) { const thN = n * 2 * Math.PI / (ratio - 1); const gScx = cx + (R - r) * Math.cos(d * thN); const gScy = cy + (R - r) * Math.sin(d * thN); s.ghosts.push({ scx: gScx, scy: gScy, phi: d * thN, n: n }); } s.lastSpinInt = spinInt; }
+
+  if (s.running) { s.trail.push({x:mx, y:my}); if (s.trail.length > 4000) s.trail.shift(); }
+
+  ctx.beginPath(); ctx.arc(cx, cy, R - r, 0, Math.PI*2); ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+  drawTrail(ctx, s.trail, 'rgba(240,165,0,.6)', 'rgba(240,165,0,.1)');
+  drawGhosts(ctx, s.ghosts, r, 'rgba(240,165,0,.06)', 'rgba(240,165,0,.25)', 'rgba(240,165,0,.2)', 'rgba(240,165,0,.55)');
+
+  ctx.beginPath(); ctx.arc(scx, scy, r, 0, Math.PI*2); ctx.strokeStyle = 'rgba(240,165,0,.15)'; ctx.lineWidth = 10; ctx.stroke();
+  ctx.beginPath(); ctx.arc(scx, scy, r, 0, Math.PI*2); ctx.fillStyle = 'rgba(240,165,0,.04)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(scx, scy, r, 0, Math.PI*2); const sg = ctx.createLinearGradient(scx-r, scy-r, scx+r, scy+r); sg.addColorStop(0, '#fbbf24'); sg.addColorStop(1, '#f59e0b'); ctx.strokeStyle = sg; ctx.lineWidth = 2.5; ctx.stroke();
+
+  for (let i=0; i<4; i++) { const a = -d * phi + Math.PI/2 * i; const ex = scx + r * .88 * Math.cos(a); const ey = scy + r * .88 * Math.sin(a); ctx.beginPath(); ctx.moveTo(scx, scy); ctx.lineTo(ex, ey); ctx.strokeStyle = i===0 ? 'rgba(240,165,0,.85)' : 'rgba(240,165,0,.2)'; ctx.lineWidth = i===0 ? 2 : 1; ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(scx, scy, 3, 0, Math.PI*2); ctx.fillStyle = '#f0a500'; ctx.fill();
+
+  drawMarkerDots(ctx, scx, scy, r, -d * phi);
+
+  ctx.beginPath(); ctx.arc(mx, my, 7, 0, Math.PI*2); ctx.fillStyle = '#e04090'; ctx.fill();
+  ctx.beginPath(); ctx.arc(mx, my, 7, 0, Math.PI*2); ctx.strokeStyle = 'rgba(224,64,144,.45)'; ctx.lineWidth = 3; ctx.stroke();
+
+  const cx2 = cx + R * Math.cos(d * th); const cy2 = cy + R * Math.sin(d * th);
+  ctx.beginPath(); ctx.arc(cx2, cy2, 4.5, 0, Math.PI*2); ctx.fillStyle = '#00ff88'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(scx, scy); ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+
+  const rs = Number.isInteger(ratio) ? ratio.toString() : ratio.toFixed(1);
+  ctx.font = '12px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.fillStyle = 'rgba(56,184,248,.7)'; ctx.fillText('R = ' + rs + 'r', cx+R+10, cy+4);
+  ctx.fillStyle = 'rgba(240,165,0,.7)'; ctx.fillText('r', scx+10, scy-10);
+
+  document.getElementById('orb0').textContent = ((th*180/Math.PI)%360).toFixed(0) + '°';
+  document.getElementById('spin0').textContent = totalSpins.toFixed(2);
+  if (Number.isInteger(ratio - 1)) { for (let n = 1; n <= ratio - 1; n++) { const el = document.getElementById('di' + n); if (el && totalSpins >= n) el.classList.add('on'); } }
+}
+
+// ── 外滚 ──
+function drawOutside() {
+  const s = st[1]; const {cx, cy, W, H, R, r} = getDrawParams(1); const ctx = s.ctx;
+  ctx.clearRect(0, 0, W, H); bg(ctx, W, H, cx, cy); bigCircle(ctx, cx, cy, R);
+
+  const th = s.theta; const ratio = Rval; const d = dirSign;
+  const scx = cx + (R + r) * Math.cos(d * th);
+  const scy = cy + (R + r) * Math.sin(d * th);
+  const phiAbs = Math.PI + (ratio + 1) * th; // 自转绝对角度（不受方向影响）
+  const mx = scx + r * Math.cos(d === 1 ? phiAbs : -phiAbs);
+  const my = scy + r * Math.sin(d === 1 ? phiAbs : -phiAbs);
+
+  const totalSpins = (ratio + 1) * th / (2 * Math.PI);
+  const spinInt = Math.floor(totalSpins);
+  if (spinInt > s.lastSpinInt) { for (let n = s.lastSpinInt + 1; n <= spinInt; n++) { const thN = n * 2 * Math.PI / (ratio + 1); const gScx = cx + (R + r) * Math.cos(d * thN); const gScy = cy + (R + r) * Math.sin(d * thN); const gPhi = d === 1 ? (Math.PI + (ratio + 1) * thN) : -(Math.PI + (ratio + 1) * thN); s.ghosts.push({ scx: gScx, scy: gScy, phi: gPhi, n: n }); } s.lastSpinInt = spinInt; }
+
+  if (s.running) { s.trail.push({x:mx, y:my}); if (s.trail.length > 6000) s.trail.shift(); }
+
+  ctx.beginPath(); ctx.arc(cx, cy, R + r, 0, Math.PI*2); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
+  drawTrail(ctx, s.trail, 'rgba(168,85,247,.6)', 'rgba(168,85,247,.1)');
+  drawGhosts(ctx, s.ghosts, r, 'rgba(168,85,247,.06)', 'rgba(168,85,247,.25)', 'rgba(168,85,247,.2)', 'rgba(168,85,247,.55)');
+
+  ctx.beginPath(); ctx.arc(scx, scy, r, 0, Math.PI*2); ctx.strokeStyle = 'rgba(168,85,247,.15)'; ctx.lineWidth = 10; ctx.stroke();
+  ctx.beginPath(); ctx.arc(scx, scy, r, 0, Math.PI*2); ctx.fillStyle = 'rgba(168,85,247,.04)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(scx, scy, r, 0, Math.PI*2); const sg = ctx.createLinearGradient(scx-r, scy-r, scx+r, scy+r); sg.addColorStop(0, '#a855f7'); sg.addColorStop(1, '#7c3aed'); ctx.strokeStyle = sg; ctx.lineWidth = 2.5; ctx.stroke();
+
+  const spokeAngle = d === 1 ? phiAbs : -phiAbs;
+  for (let i=0; i<4; i++) { const a = spokeAngle + Math.PI/2 * i; const ex = scx + r * .88 * Math.cos(a); const ey = scy + r * .88 * Math.sin(a); ctx.beginPath(); ctx.moveTo(scx, scy); ctx.lineTo(ex, ey); ctx.strokeStyle = i===0 ? 'rgba(168,85,247,.85)' : 'rgba(168,85,247,.2)'; ctx.lineWidth = i===0 ? 2 : 1; ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(scx, scy, 3, 0, Math.PI*2); ctx.fillStyle = '#a855f7'; ctx.fill();
+
+  drawMarkerDots(ctx, scx, scy, r, spokeAngle);
+
+  ctx.beginPath(); ctx.arc(mx, my, 7, 0, Math.PI*2); ctx.fillStyle = '#e04090'; ctx.fill();
+  ctx.beginPath(); ctx.arc(mx, my, 7, 0, Math.PI*2); ctx.strokeStyle = 'rgba(224,64,144,.45)'; ctx.lineWidth = 3; ctx.stroke();
+
+  const cx2 = cx + R * Math.cos(d * th); const cy2 = cy + R * Math.sin(d * th);
+  ctx.beginPath(); ctx.arc(cx2, cy2, 4.5, 0, Math.PI*2); ctx.fillStyle = '#00ff88'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(scx, scy); ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+
+  const rs = Number.isInteger(ratio) ? ratio.toString() : ratio.toFixed(1);
+  ctx.font = '12px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.fillStyle = 'rgba(56,184,248,.7)'; ctx.fillText('R = ' + rs + 'r', cx+R+10, cy+4);
+  ctx.fillStyle = 'rgba(168,85,247,.7)'; ctx.fillText('r', scx+10, scy-10);
+
+  document.getElementById('orb1').textContent = ((th*180/Math.PI)%360).toFixed(0) + '°';
+  document.getElementById('spin1').textContent = totalSpins.toFixed(2);
+  const outerInt = Math.ceil(ratio + 1);
+  for (let n = 1; n <= outerInt; n++) { const el = document.getElementById('do' + n); if (el && totalSpins >= n) el.classList.add('on'); }
+}
+
+function draw(i) { i===0 ? drawInside() : drawOutside(); }
+function animLoop(i) { const s = st[i]; if (!s.running) return; s.theta += 0.007 * s.speed; const maxTheta = Math.PI * 2 * orbitCount; if (s.theta >= maxTheta) { s.theta = maxTheta; s.running = false; s.finished = true; document.getElementById('b'+i).textContent = '▶ 重播'; } draw(i); if (s.running) requestAnimationFrame(() => animLoop(i)); }
+
+updateUI(); draw(0); draw(1); setMode('widescreen');
+</script>
+</body>
+</html>
